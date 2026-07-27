@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+Data/raw/
+Data/
+Release-26.02.0-0/
+01_fetch_reviews.ipynb
+04c_fetch_multiple_years.ipynb
+04b_extract_financials_from_pdf.ipynb
+.env
