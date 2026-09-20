@@ -1,225 +1,109 @@
 # Revolut Public Data Analysis (Independent Project)
 
-An independent, unofficial analysis of Revolut's publicly available data — combining
-financial statement analysis, customer review sentiment analysis, and unsupervised machine
-learning to explore how the business has grown and where specific customer experience gaps
-exist.
+An independent, unofficial analysis of Revolut's publicly available data — combining financial statement analysis, customer review sentiment analysis, and unsupervised machine learning to explore how the business has grown and where specific customer experience gaps exist.
 
-**Disclaimer:** This project is not affiliated with, endorsed by, or produced in partnership
-with Revolut. All data used is publicly available — audited annual reports filed with UK
-Companies House, and public Google Play Store reviews. No private, internal, or confidential
-information was used at any point.
+**Disclaimer:** This project is not affiliated with, endorsed by, or produced in partnership with Revolut. All data used is publicly available — audited annual reports filed with UK Companies House, and public Google Play Store reviews. No private, internal, or confidential information was used at any point.
 
----
-
-## Overview
-
-This project set out to answer two connected questions:
-
-1. **How has Revolut grown financially, and how efficiently?**
-2. **What are real customers actually experiencing, and does it align with the growth story?**
-
-Rather than treat these as separate exercises, the project deliberately cross-references
-financial/operational data (staffing, revenue, lending) against customer sentiment data, to
-see whether operational decisions show up in how customers describe their experience.
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![Transformers](https://img.shields.io/badge/HuggingFace-DistilBERT-FFD21E?style=flat)
+![BERTopic](https://img.shields.io/badge/BERTopic-Unsupervised%20NLP-blue?style=flat)
+![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=flat&logo=powerbi&logoColor=black)
 
 ---
 
-## Data Sources
+## Executive Summary
 
-- **Financial data:** Revolut Group Holdings Ltd (Companies House company no. 12743269) —
-  audited annual report PDFs, 2021–2025, downloaded via the Companies House public API and
-  extracted via OCR (the filings are image-based, not text-searchable PDFs).
-- **Customer review data:** ~290,000 Google Play Store reviews for the Revolut Android app,
-  collected via public review APIs.
+Most public-facing analyses of a fintech pick one lens — either the financials look strong, or the reviews are complained about — and stop there. This project set out to hold both at once and ask whether they actually agree with each other: **how has Revolut grown financially, and does that growth story line up with what real customers say they're experiencing?**
+
+Two independent, publicly available data sources were combined to answer that: five years of audited annual reports (2021–2025), and roughly 290,000 Google Play Store reviews. Rather than presenting the financial story and the sentiment story as two separate write-ups, this project deliberately cross-references them — checking whether operational decisions (like staffing changes) actually show up in how customers describe their experience, rather than assuming they do.
+
+---
+
+## Headline Results
+
+- Revenue grew from **£637.9M (2021)** to **£4.52bn (2025)**; net margin expanded from **0.6%** to **28.9%** over the same period
+- Loan book scaled **123x** — from £18.2M (2021) to £2.24bn (2025) — while impairment rates held broadly steady
+- Customer support's share of total headcount fell from **50% (2024)** to **43% (2025)**, even as the user base grew ~30%
+- Benchmarked two sentiment methods on **~290,000 reviews**: a transformer model (DistilBERT) correctly identified **95.9%** of confirmed 1-star reviews as negative, versus **57.2%** for a lexicon-based method (VADER)
+- Unsupervised topic modeling surfaced **6 distinct complaint categories** invisible to manual keyword tagging
+- Identified a specific, independently verifiable technical compatibility issue (GrapheneOS) affecting a small but high-loyalty customer segment, with a company reply rate of just **2.8%** against a 24.5% overall average
+
+---
+
+## Tools Used
+
+- **Python** — `google-play-scraper`, Companies House REST API, Tesseract OCR, Poppler (for extracting text from image-based financial filing PDFs)
+- **pandas** — data cleaning and processing
+- **VADER, HuggingFace Transformers (DistilBERT), BERTopic, scikit-learn** — sentiment analysis, unsupervised topic modeling, and predictive modeling
+- **Power BI (DAX, Power Query)** — final dashboard and visualization layer
 
 ---
 
 ## Methodology
 
-- **Data cleaning:** Identified and removed a CSV parsing corruption issue affecting ~5.9%
-  of scraped review rows (unescaped commas in reply text caused column misalignment);
-  documented and excluded via validation on the `rating` field.
-- **Sentiment analysis:** Initially used VADER (lexicon-based sentiment scoring). Benchmarked
-  against a transformer model (DistilBERT) using star rating as ground truth — VADER
-  correctly identified only 57.2% of confirmed 1-star reviews as negative, versus 95.9% for
-  the transformer model. The transformer model was adopted as the more reliable method going
-  forward, and this benchmarking exercise is documented as a methodological finding in its
-  own right.
-- **Theme analysis:** A manual keyword-based tagging system (account freezes, customer
-  support, fees, verification, app stability, transfers) was used for structured theme
-  counting.
-- **Unsupervised topic modeling (BERTopic):** Used to discover complaint patterns not
-  captured by the predefined keyword list. Default settings proved unreliable —
-  reproducibility testing across multiple runs showed topic composition varied significantly
-  depending on random sampling, a known limitation of density-based clustering on datasets
-  with a strong positive skew (~88% positive reviews). Lowering the clustering threshold and
-  sorting clusters by actual average star rating (rather than trusting auto-generated
-  keyword labels, which were often generic) was necessary to reliably surface genuine
-  negative clusters.
-- **Predictive modeling:** A Random Forest classifier was trained to predict 1-star reviews
-  from sentiment score, review length, and theme flags, to rank which specific complaint
-  themes carry the most independent predictive weight.
+- **Data cleaning:** Identified and removed a CSV parsing corruption affecting ~5.9% of scraped review rows — unescaped commas inside reply text had caused column misalignment. Caught and excluded via validation against the `rating` field, rather than assumed away.
+- **Sentiment analysis:** Started with VADER, a standard lexicon-based approach. Rather than take its output at face value, it was benchmarked against a transformer model using star rating as ground truth — and VADER underperformed significantly enough (57.2% vs 95.9% correct identification of confirmed 1-star reviews) that the transformer model was adopted as the primary method going forward. The benchmarking exercise itself is documented as a finding, not discarded once a "winner" was picked.
+- **Theme analysis:** A manual, keyword-based tagging system covered the expected categories — account freezes, customer support, fees, verification, app stability, transfers.
+- **Unsupervised topic modeling (BERTopic):** Used specifically to catch what a predefined keyword list couldn't anticipate. Default settings proved unreliable on this dataset — reproducibility testing across multiple runs showed topic composition shifting meaningfully run to run, a known risk of density-based clustering on a dataset this skewed (~88% positive reviews). Fixed by lowering the clustering threshold and sorting resulting clusters by actual average star rating, rather than trusting the auto-generated keyword labels, which were often too generic to be useful on their own.
+- **Predictive modeling:** A Random Forest classifier was trained to predict 1-star reviews from sentiment score, review length, and theme flags — used to rank which specific complaint themes carry independent predictive weight, rather than relying on raw complaint volume alone.
 
 ---
 
-## Key Findings
+## Insights
 
-<img width="1326" height="743" alt="image" src="https://github.com/user-attachments/assets/b21032ad-54a6-484e-9000-ba85c8b66ca0" />
+- **The financial story is a genuinely strong one, not just a growth-at-all-costs one.** Margin expansion came primarily from administrative expense ratio falling (72.3% → 40.0%), not from revenue alone — evidence of real operating discipline. Decelerating revenue growth (94.9% → 71.3% → 46.6% YoY) paired with accelerating profitability reads as a business transitioning from hypergrowth into maturity, not slowing down in a worrying way.
 
-### Financial Performance — Efficient, Maturing Growth
-- Revenue grew from £637.9M (2021) to £4.52bn (2025); net margin expanded from 0.6% (2022)
-  to 28.9% (2025), driven primarily by administrative expense ratio falling from 72.3% to
-  40.0% — evidence of genuine operating efficiency, not just top-line growth.
-- 2022 recorded a real pre-tax operating loss (-£25.4M), coinciding with a corporate
-  restructuring event; a one-off tax credit pushed net profit narrowly positive that year.
-- Revenue growth is decelerating (94.9% → 71.3% → 46.6% year-on-year) even as profitability
-  accelerates — consistent with a business transitioning from hypergrowth to maturity.
+- **A staffing decision didn't produce the outcome you'd expect — and that's the more interesting result.** Customer support's relative share of headcount fell in 2025 even as the user base grew. The intuitive assumption is that this should show up as rising complaint volume in the reviews. It didn't — complaint volume trended downward over the same window. Rather than force a cause-and-effect conclusion either way, this is flagged as a genuinely open question: possible explanations include improved self-service tooling, automation, or a shift in *what* customers are dissatisfied about (verification, fraud handling) rather than support capacity itself.
 
-<img width="1322" height="736" alt="image" src="https://github.com/user-attachments/assets/68853259-3477-4e91-ab58-0bf1ec3c6d24" />
+- **Unsupervised modeling found something no keyword list would have looked for.** BERTopic surfaced a cluster tied to GrapheneOS, a privacy-focused Android OS, that manual theme-tagging had no way to anticipate. Reading the actual review text inside that cluster — not just its auto-generated keyword summary — revealed several reviewers self-identifying as long-tenured, Premium ("Metal" tier) customers. That detail was invisible in the model's own labeling; it only surfaced by going back and reading the underlying text by hand.
 
-### Revenue Mix & Lending
-- Cards & interchange overtook FX/Wealth as the largest fee income source between 2021 and
-  2022; subscriptions held a stable ~20% share of fee income across all five years.
-- The loan book grew 123x from 2021 (£18.2M) to 2025 (£2.24bn). Mortgages, a near-zero
-  product in 2024, grew to £87.6M in 2025. Loan impairment rates held broadly steady
-  (~4% in 2024–2025) despite this rapid scaling, though an earlier spike (6.5% in 2023)
-  suggests risk processes matured alongside the loan book rather than being static.
-
-<img width="1323" height="743" alt="image" src="https://github.com/user-attachments/assets/4e7e28ac-314a-4524-8dbe-2142deb093b2" />
-
-### People & Operations
-- Total headcount grew from 2,365 (2021) to 10,909 (2025). Customer support's share of the
-  overall workforce peaked at 50% in 2024, then fell to 43% in 2025 even as the user base
-  grew roughly 30% that year — a real reduction in relative support investment.
-- **Notably, this reduction in relative support staffing did not correspond to a rise in
-  customer support complaint volume in the review data — complaint volume trends downward
-  over the same period.** This is a genuinely interesting finding worth further
-  investigation rather than a simple cause-and-effect story: possible explanations include
-  improved self-service tooling, automation, or changes in the underlying causes of
-  dissatisfaction shifting toward other themes (e.g. verification, fraud handling) rather
-  than general support capacity. The data supports a more nuanced read than "less staff
-  means more complaints" — it did not straightforwardly play out that way here.
-  
-<img width="1321" height="742" alt="image" src="https://github.com/user-attachments/assets/29714f6f-3f0b-4191-85e9-5a6a42c07f6d" />
-<img width="1315" height="737" alt="image" src="https://github.com/user-attachments/assets/606fce60-2890-4f48-ab4d-3b577c12f493" />
-
-### Six Distinct Complaint Categories (via ML Topic Modeling)
-Beyond the general keyword-based themes, unsupervised topic modeling surfaced six specific,
-independently distinguishable complaint categories, each pointing to a different
-operational issue rather than one generic "poor support" problem:
-
-| Category | Reviews | Avg. Rating | Company Reply Rate |
-|---|---|---|---|
-| Fraud / unauthorized transactions | 167 | 1.10 | 45.5% |
-| Login & authentication failures | 153 | 1.23 | 62.7% |
-| Identity verification failures | 131 | 1.26 | 54.2% |
-| Scam allegations & failed recovery | 151 | 1.07 | 57.0% |
-| Unexplained account blocks | 86 | 1.07 | 38.4% |
-| **GrapheneOS compatibility** | 52 | 1.13 | **2.8%** |
-
-*(Overall dataset average reply rate: 24.5%)*
-
----
-<img width="1320" height="740" alt="image" src="https://github.com/user-attachments/assets/20c8be14-5c19-4694-9eb3-986c34a1c23f" />
-
-## Spotlight: The GrapheneOS Compatibility Issue
-
-This finding stood out as the most specific, rigorously verified, and independently
-corroborated result in the entire project, so it received a dedicated dashboard page.
-
-**What was found:** Since around December 2024, Revolut has enforced Google's Play Integrity
-API, which blocks login for users running GrapheneOS — a privacy and security-focused custom
-Android operating system. This was discovered through unsupervised topic modeling, not
-through the original manually-defined keyword themes, since "GrapheneOS" was not a term
-anticipated in advance. Printing and inspecting a sample of the actual review text contained
-within this cluster revealed a notable pattern: several reviewers explicitly self-identified
-as long-tenured, **Premium ("Metal" tier)** customers — for example, referencing having used
-the app "for more than 5 years" or being "a metal customer" for years — indicating this issue
-disproportionately affects Revolut's higher-value, higher-loyalty subscriber base rather than
-casual free-tier users. This customer-tier detail was not something the model itself
-detected, labeled, or quantified — the cluster's automated keyword summary gave no hint of
-it. It only became apparent by examining the underlying review text the model had grouped
-together, underscoring that cluster labels and keyword summaries alone were insufficient to
-extract the full business-relevant detail here.
-
-**Verification steps taken:**
-- Confirmed 52 distinct customers, with zero repeat reviewers, explicitly referenced
-  GrapheneOS or Play Integrity API-related terms in their reviews — ruling out a small
-  handful of vocal repeat complainers as the source of the pattern.
-- 91% of these reviews were 1-star.
-- The complaint timeline (spiking sharply in December 2024, continuing through September
-  2025) aligns precisely with independently published, public statements from GrapheneOS's
-  official channels, which describe the block as a deliberate policy decision — not a
-  compatibility bug — and report ongoing contact with the EU Commission regarding it as of
-  September 2025.
-- **Company reply rate to these complaints was just 2.8%** — roughly 1/9th of the 24.5%
-  overall average reply rate across all complaint types — despite several affected customers
-  identifying themselves as long-tenured, Premium ("Metal" tier) subscribers.
-
-**Why this matters:** This is a small-volume but high-value, technically sophisticated, and
-publicly vocal customer segment. The underlying fix (supporting GrapheneOS's published
-attestation compatibility guide) is a comparatively low-cost technical change relative to the
-reputational and regulatory exposure risk of continued neglect, particularly given the
-existing EU Commission attention.
-
-This case study demonstrates the practical value of unsupervised machine learning as a
-complement to hypothesis-driven analysis — it surfaced a specific, real, and independently
-verifiable business issue that a predefined keyword list would never have anticipated.
+- **The reply-rate gap on that cluster is the sharpest single number in the whole project.** 52 distinct customers (zero repeat reviewers), 91% of them 1-star, and a 2.8% company reply rate — against a 24.5% average across every other complaint category. The complaint timeline also lines up precisely with GrapheneOS's own public statements describing the block as a deliberate policy decision, not a bug, adding independent corroboration outside the review data itself.
 
 ---
 
-## Overall Business Assessment
+## Recommendations
 
-Taken together, the data suggests a business executing a genuinely strong growth and
-profitability story: margin expansion, disciplined lending growth, and revenue
-diversification all point to a maturing, well-managed fintech. Customer sentiment overall
-remains strongly positive (the large majority of reviews are 5 star). Rather than a broad
-customer service crisis, the data points to **specific, addressable service gaps** —
-particularly around fraud recovery support, identity verification flexibility, and
-niche technical compatibility issues like GrapheneOS — where response and resolution appear
-inconsistent relative to the severity and, in some cases, the value of the customers
-affected. These are the kind of targeted, fixable issues that a growing fintech can address
-without requiring a wholesale change in strategy.
+1. **Prioritize a fix for GrapheneOS compatibility.** This affects a small but high-value, technically sophisticated, and publicly vocal segment — several of whom are long-tenured Premium subscribers. The underlying fix (supporting GrapheneOS's published attestation compatibility guide) is a comparatively low-cost technical change relative to the reputational and regulatory exposure of continued neglect, particularly with GrapheneOS's own channels reporting ongoing contact with the EU Commission on this issue.
+
+2. **Investigate the reply-rate inconsistency across complaint categories, not just the GrapheneOS case.** Fraud/unauthorized transactions (45.5%) and unexplained account blocks (38.4%) also sit well below the 24.5% average, despite carrying some of the lowest average star ratings (1.10 and 1.07) in the dataset — these are the highest-severity complaints receiving comparatively little visible response.
+
+3. **Investigate the support-headcount-to-complaint-volume disconnect directly, rather than treating the 2025 staffing reduction as validated by falling complaint volume.** The data doesn't support a simple "it worked" conclusion — it supports a more specific question worth answering internally: did resolution quality change, or did the *nature* of complaints shift toward categories this review data doesn't fully capture?
+
+4. **Extend this analysis to iOS review data.** Every finding here — including the GrapheneOS case, which is Android-specific by nature — reflects Android users only. A genuinely complete picture of customer sentiment needs the other half of the user base included.
 
 ---
 
-## Tech Stack
+## Screenshots
 
-- **Data extraction:** Python, `google-play-scraper`, Companies House REST API, Tesseract
-  OCR, Poppler
-- **Data processing:** pandas
-- **NLP / ML:** VADER, HuggingFace Transformers (DistilBERT), BERTopic, scikit-learn
-  (Random Forest)
-- **Visualization:** Power BI (DAX measures, Power Query)
+<img width="1326" height="743" alt="Financial performance overview" src="https://github.com/user-attachments/assets/b21032ad-54a6-484e-9000-ba85c8b66ca0" />
+
+<img width="1322" height="736" alt="Revenue mix and lending" src="https://github.com/user-attachments/assets/68853259-3477-4e91-ab58-0bf1ec3c6d24" />
+
+<img width="1323" height="743" alt="People and operations" src="https://github.com/user-attachments/assets/4e7e28ac-314a-4524-8dbe-2142deb093b2" />
+
+<img width="1321" height="742" alt="Complaint categories" src="https://github.com/user-attachments/assets/29714f6f-3f0b-4191-85e9-5a6a42c07f6d" />
+
+<img width="1315" height="737" alt="Topic modeling detail" src="https://github.com/user-attachments/assets/606fce60-2890-4f48-ab4d-3b577c12f493" />
+
+<img width="1320" height="740" alt="GrapheneOS spotlight" src="https://github.com/user-attachments/assets/20c8be14-5c19-4694-9eb3-986c34a1c23f" />
+
+---
+
+## Limitations
+
+- **Review data is Android-only.** All reviews were collected from the Google Play Store; no App Store (iOS) reviews are included. Every finding on customer sentiment — including the GrapheneOS case study, which is itself Android-specific — should be read as representative of Android users only.
+- **The two datasets don't share a common timeline.** Review data covers a variable historical window; financial data covers audited years 2021–2025 only. Where they don't overlap, they're presented as separate analytical views rather than forced into one misleading combined timeline.
+- **BERTopic's reproducibility issue is disclosed, not hidden.** Multiple runs produced varying topic composition — this is documented transparently in the accompanying notebooks rather than presenting only the most favorable single run.
+- **This project has no access to Revolut's internal data** — no support tickets, resolution outcomes, or retention metrics. Every conclusion is built entirely from public review text and public financial filings, and should be read with that ceiling in mind.
+
+---
+
+## Key Learnings
+
+- **Benchmarking a method against ground truth is worth doing even when the "obvious" method seems fine.** VADER looked like a reasonable default until it was checked against actual star ratings — at which point it missed nearly half of confirmed negative reviews. Picking a method without checking it against something objective would have quietly weakened every downstream finding.
+- **An automated label is a starting point, not the finding itself.** BERTopic's keyword summaries didn't surface the Premium-tier detail in the GrapheneOS cluster at all — that only came from reading the actual review text the model had grouped together. The model found the *shape* of the issue; understanding it required going back to the raw data.
+- **A model's default settings deserve the same scrutiny as its output.** BERTopic's reproducibility problem wasn't visible from a single run — it only showed up by deliberately re-running the same analysis and checking whether the answer changed. Reporting one favorable run without that check would have been a real, avoidable blind spot.
 
 ---
 
 ## Repository Structure
-
-```
-notebooks/       Jupyter notebooks (cleaning, sentiment analysis, ML modeling)
-                  Note: raw data fetching / OCR extraction notebooks are excluded
-                  from this repository.
-Dashboard/        Power BI file
-```
-
----
-
-## Notes & Limitations
-
-- **Review data is Android-only.** All review data was collected from the Google Play Store;
-  no App Store (iOS) reviews are included. Findings on customer sentiment and specific
-  complaint patterns — including the GrapheneOS case study, which is itself an Android-only
-  issue by nature — should be read as representative of Android users' experience only, not
-  the full customer base across both platforms.
-- Review data covers a variable historical window; financial data covers audited years
-  2021–2025 only. Where the two datasets don't share an overlapping time period, they are
-  presented as separate analytical views rather than forced into a single misleading
-  timeline.
-- BERTopic results required a documented reproducibility investigation — this is disclosed
-  transparently in the accompanying notebooks rather than presenting only the most favorable
-  single run.
-- This analysis relies entirely on public review text and public financial filings; it does
-  not have access to Revolut's internal support tickets, resolution data, or customer
-  acquisition/retention metrics, and conclusions should be read with that limitation in mind.
