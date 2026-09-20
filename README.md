@@ -1,8 +1,8 @@
 # Revolut Public Data Analysis (Independent Project)
 
-An independent, unofficial analysis of Revolut's publicly available data — combining financial statement analysis, customer review sentiment analysis, and unsupervised machine learning to explore how the business has grown and where specific customer experience gaps exist.
+An independent, unofficial analysis of Revolut's publicly available data combining financial statement analysis, customer review sentiment analysis, and unsupervised machine learning to explore how the business has grown and where specific customer experience gaps exist.
 
-**Disclaimer:** This project is not affiliated with, endorsed by, or produced in partnership with Revolut. All data used is publicly available — audited annual reports filed with UK Companies House, and public Google Play Store reviews. No private, internal, or confidential information was used at any point.
+**Disclaimer:** This project is not affiliated with, endorsed by, or produced in partnership with Revolut. All data used is publicly available audited annual reports filed with UK Companies House, and public Google Play Store reviews. No private, internal, or confidential information was used at any point.
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
 ![Transformers](https://img.shields.io/badge/HuggingFace-DistilBERT-FFD21E?style=flat)
