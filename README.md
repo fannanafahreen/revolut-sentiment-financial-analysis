@@ -21,12 +21,12 @@ Two independent, publicly available data sources were combined to answer that: f
 
 ## Headline Results
 
-- Revenue grew from **£637.9M (2021)** to **£4.52bn (2025)**; net margin expanded from **0.6%** to **28.9%** over the same period
-- Loan book scaled **123x** — from £18.2M (2021) to £2.24bn (2025) — while impairment rates held broadly steady
-- Customer support's share of total headcount fell from **50% (2024)** to **43% (2025)**, even as the user base grew ~30%
-- Benchmarked two sentiment methods on **~290,000 reviews**: a transformer model (DistilBERT) correctly identified **95.9%** of confirmed 1-star reviews as negative, versus **57.2%** for a lexicon-based method (VADER)
-- Unsupervised topic modeling surfaced **6 distinct complaint categories** invisible to manual keyword tagging
-- Identified a specific, independently verifiable technical compatibility issue (GrapheneOS) affecting a small but high-loyalty customer segment, with a company reply rate of just **2.8%** against a 24.5% overall average
+- **Identified a specific, independently verifiable technical compatibility issue** (GrapheneOS) affecting a small but high-loyalty customer segment, with a company reply rate of just **2.8%** against a 24.5% overall average.
+- Customer support's share of total headcount fell from **50% (2024)** to **43% (2025)**, even as the user base grew ~30%.
+- Revenue grew from **£637.9M (2021)** to **£4.52bn (2025)**; net margin expanded from **0.6%** to **28.9%** over the same period.
+- Loan book scaled **123x** — from £18.2M (2021) to £2.24bn (2025) — while impairment rates held broadly steady.
+- Benchmarked two sentiment methods on **~290,000 reviews**: a transformer model (DistilBERT) correctly identified **95.9%** of confirmed 1-star reviews as negative, versus **57.2%** for a lexicon-based method (VADER).
+- Unsupervised topic modeling surfaced **6 distinct complaint categories** invisible to manual keyword tagging.
 
 ---
 
