@@ -105,5 +105,3 @@ Two independent, publicly available data sources were combined to answer that: f
 - **A model's default settings deserve the same scrutiny as its output.** BERTopic's reproducibility problem wasn't visible from a single run — it only showed up by deliberately re-running the same analysis and checking whether the answer changed. Reporting one favorable run without that check would have been a real, avoidable blind spot.
 
 ---
-
-## Repository Structure
